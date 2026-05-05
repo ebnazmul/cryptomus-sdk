@@ -37,27 +37,48 @@ export class CryptomusClient {
     this.apiKey = apiKey;
     this.merchantId = merchantId;
     this.baseURL = baseURL ?? BASE_URL;
-    this.axios = createAxios({ baseURL: this.baseURL });
+
+    this.axios = createAxios({
+      baseURL: this.baseURL,
+    });
+
+    this.axios.interceptors.request.use((config) => {
+      config.headers.merchant = this.merchantId;
+      config.headers.sign = this.sign(config.data);
+      return config;
+    });
   }
 
   sign(body: any) {
-    
     const base64Body = Buffer.from(body).toString("base64");
-
     const sign = crypto
       .createHash("md5")
       .update(base64Body + this.apiKey)
       .digest("hex");
-    
     return sign;
   }
 
-  
-}
+  createInvoice({
+    amount,
+    currency,
+    order_id,
+  }: {
+    amount: number;
+    order_id: string;
+    currency: string;
+  }) {
+    return this.axios.post("/payment", {
+      amount,
+      order_id,
+      currency: currency ?? "USD",
+    });
+  }
 
-const cryptomos = new CryptomusClient({
-  apiKey: "aaeddd-ffff-aaass011",
-  merchantId: "1113353",
-});
+
+  
+
+
+
+}
 
 
